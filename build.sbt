@@ -1,6 +1,10 @@
+import NativePackagerHelper._
+
 name := "data-feeds"
 
 organization := "com.advancedtelematic"
+
+maintainer in Docker := "Advanced Telematic Systems <dev@advancedtelematic.com>"
 
 version := "0.0.1"
 
@@ -24,3 +28,10 @@ libraryDependencies ++= akka ++ Seq(
     ExclusionRule(organization = "javax.jms")
   )
 )
+
+enablePlugins(JavaAppPackaging)
+enablePlugins(DockerPlugin)
+
+dockerBaseImage := "dockerfile/java:oracle-java8"
+
+mappings in Universal ++= directory("data")
