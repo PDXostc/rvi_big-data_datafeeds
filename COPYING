@@ -1,0 +1,25 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: RVI Big Data Example Feeds
+Source: git@gitlab.advancedtelematic.com:rvi_big_data/data_feeds.git
+
+Files: src/*
+Copyright: Copyright 2015, ATS Advanced Telematic Systems GmbH
+License: Proprietary
+ This software is the private property of ATS Advanced Telematic 
+ Systems GmbH, and should be treated as confidential. This software
+ is not for redistribution except as explicitly permitted by an
+ authorized representative of ATS Advanced Telematic Systems GmbH.
+ .
+ This program is distributed WITHOUT ANY WARRANTY; without even 
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+ PARTICULAR PURPOSE.
+ .
+
+Files: data/*
+Copyright: 2009, Michal Piorkowski
+Copyright: 2009, Natasa Sarafijanovic-Djukic
+Copyright: 2009, Matthias Grossglauser
+Upstream-Name: CRAWDAD data set epfl/mobility (v. 2009-02-24)
+Upstream-Source: http://crawdad.org/epfl/mobility/
+License: public-domain
+
