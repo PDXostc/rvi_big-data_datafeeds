@@ -1,3 +1,7 @@
+/**
+ * Copyright 2015, ATS Advanced Telematic Systems GmbH
+ * All Rights Reserved
+ */
 package com.advancedtelematic.feed
 
 import akka.actor.Actor
