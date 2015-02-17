@@ -20,11 +20,11 @@ case class TraceEntry(id: String, timestamp: DateTime, payload: String)
 
 object Feeder {
 
-  def props(input : java.io.File, speed: Int, subscriber: ActorRef) = Props( classOf[Feeder], input, speed, subscriber )
+  def props(input : java.io.File, speed: Option[Int], subscriber: ActorRef) = Props( classOf[Feeder], input, speed, subscriber )
 
 }
 
-class Feeder(input : java.io.File, speed: Int, subscriber: ActorRef) extends Actor with akka.actor.ActorLogging {
+class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef) extends Actor with akka.actor.ActorLogging {
 
   var src: io.Source = _
   var data : Iterator[TraceEntry] = _
@@ -41,7 +41,7 @@ class Feeder(input : java.io.File, speed: Int, subscriber: ActorRef) extends Act
   override def preStart() {
     src = io.Source.fromFile(input, "utf-8")
     data = src.getLines().map( parse )
-    val first = data.next()    
+    val first = data.next()
     self ! first
   }
 
@@ -49,18 +49,24 @@ class Feeder(input : java.io.File, speed: Int, subscriber: ActorRef) extends Act
     case entry : TraceEntry =>
       subscriber ! entry
       if( data.hasNext ) {
-        import com.github.nscala_time.time.Imports._
         val next = data.next()
-        val interval = (entry.timestamp to next.timestamp).millis / speed
-        context.system.scheduler.scheduleOnce(interval.millis, self, next)(context.dispatcher)
+        scheduleNext( entry, next )
       } else {
         log.info( "Input stream empty. Stopping." )
         context.stop( self )
       }
   }
 
-  override def postStop() {
-    Try( src.close() )
+  def scheduleThrottled(speed: Int) : (TraceEntry, TraceEntry) => Unit = (entry, next) => {
+    import com.github.nscala_time.time.Imports._
+    val interval = (entry.timestamp to next.timestamp).millis / speed
+    context.system.scheduler.scheduleOnce(interval.millis, self, next)(context.dispatcher)
   }
 
+  lazy val scheduleNext : (TraceEntry, TraceEntry) => Unit = maybeSpeed.map( scheduleThrottled ).getOrElse( (entry: TraceEntry, next: TraceEntry) => self ! next )
+
+
+  override def postStop() {
+    Try(src.close())
+  }
 }
