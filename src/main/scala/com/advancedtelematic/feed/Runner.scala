@@ -56,7 +56,7 @@ object Runner extends App {
 
   val conf = akka.settings.config
 
-  val kafkaWorkers = (1 to 3).map( nr => akka.actorOf( KafkaProducer.props( conf.getString("kafka.broker")).withDispatcher("kafka-dispatcher"), s"kafka-producer-$nr" ) )
+  val kafkaWorkers = (1 to 3).map( nr => akka.actorOf( KafkaProducer.props( conf.getString("kafka.broker")).withDispatcher("pinned-dispatcher"), s"kafka-producer-$nr" ) )
   val producer = akka.actorOf( RoundRobinGroup( kafkaWorkers.map(_.path.toString) ).props(), "kafka" )
 //  val producer = akka.actorOf( KafkaProducer.props( conf.getString("kafka.broker")).withDispatcher("kafka-dispatcher"), "kafka" )
 

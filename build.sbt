@@ -14,6 +14,14 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/
 
 val akkaVersion     = "2.3.9"
 
+val SparkVersion = "1.2.0"
+
+val spark = Seq(
+  "com.datastax.spark"  %% "spark-cassandra-connector"  % "1.2.0-alpha2",
+  "org.apache.spark" %% "spark-core" % SparkVersion,
+  "org.apache.spark" %% "spark-streaming" % SparkVersion
+)
+
 val akka = Seq(
   "com.typesafe.akka" % "akka-stream-experimental_2.10" % "1.0-M3",
   "com.typesafe.akka"   %%  "akka-actor"       % akkaVersion,
@@ -21,7 +29,7 @@ val akka = Seq(
   "ch.qos.logback"      %   "logback-classic"  % "1.0.13"
 )
 
-libraryDependencies ++= akka ++ Seq(
+libraryDependencies ++= spark ++ Seq(
   "com.github.nscala-time" %% "nscala-time" % "1.6.0",
   "org.apache.kafka" %% "kafka" % "0.8.1" excludeAll(
     ExclusionRule(organization = "com.sun.jdmk"),
@@ -30,7 +38,10 @@ libraryDependencies ++= akka ++ Seq(
   )
 )
 
+mainClass in (Compile) := Some("com.advancedtelematic.feed.Runner")
+
 enablePlugins(JavaAppPackaging)
+
 enablePlugins(DockerPlugin)
 
 dockerBaseImage := "dockerfile/java:oracle-java8"

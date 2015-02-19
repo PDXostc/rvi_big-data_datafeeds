@@ -26,7 +26,7 @@ object Feeder {
 
 class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef) extends Actor with akka.actor.ActorLogging {
 
-  var src: io.Source = _
+  var src: scala.io.Source = _
   var data : Iterator[TraceEntry] = _
 
   def parse(str: String) : TraceEntry = {
@@ -39,7 +39,7 @@ class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef
   }
 
   override def preStart() {
-    src = io.Source.fromFile(input, "utf-8")
+    src = scala.io.Source.fromFile(input, "utf-8")
     data = src.getLines().map( parse )
     val first = data.next()
     self ! first
