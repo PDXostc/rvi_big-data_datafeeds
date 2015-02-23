@@ -26,6 +26,8 @@ case class TraceByCar(id: String, year: Int, month: Int, day: Int, hour: Int, da
 
 case class TraceByTime(year: Int, month: Int, day: Int, hour: Int, minute: Int, id: String, lat: BigDecimal, lng: BigDecimal, isOccupied: Boolean)
 
+case class PickupDropoff(year: Int, date: Date, id: String, lat: BigDecimal, lng: BigDecimal, isPickup: Boolean)
+
 object TraceByCar {
   def fromTraceEntry( te: ParsedTraceEntry ) = {
     TraceByCar(
@@ -86,7 +88,8 @@ object CassandraFeeder extends App {
 
   val dataFolder = new File( conf.getString("data.dir") )
   val feedFiles = if (conf.hasPath("feeds.limit")) dataFolder.listFiles().take( conf.getInt("feeds.limit") ) else dataFolder.listFiles()
-  
+
+  import org.apache.spark.mllib.rdd.RDDFunctions.fromRDD
 
   val parsedFeeds = feedFiles.map { file =>
     sc.textFile( file.getAbsolutePath )
@@ -96,5 +99,21 @@ object CassandraFeeder extends App {
   parsedFeeds.foreach( _.map(TraceByCar.fromTraceEntry).saveToCassandra("rvi_demo", "trace_by_car"))
 
   parsedFeeds.foreach( _.map(TraceByTime.fromTraceEntry).filter(_.minute % 5 == 0).saveToCassandra("rvi_demo", "traces_by_time") )
+
+  parsedFeeds.foreach( rdd =>
+    rdd.sliding(2)
+      .filter{
+        case Array(first, second) => first.isOccupied != second.isOccupied
+      }.map {
+        case Array(_, second) => PickupDropoff(
+          year = second.timestamp.getYear,
+          date = second.timestamp.toDate(),
+          id = second.id,
+          lat = second.lat,
+          lng = second.lng,
+          isPickup = second.isOccupied
+        )
+      }.saveToCassandra("rvi_demo", "pickups_dropoffs")
+  )
 
 }

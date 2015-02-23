@@ -6,7 +6,7 @@ organization := "com.advancedtelematic"
 
 maintainer in Docker := "Advanced Telematic Systems <dev@advancedtelematic.com>"
 
-version := "0.0.3"
+version := "0.1.0"
 
 scalaVersion := "2.10.4"
 
@@ -19,7 +19,8 @@ val SparkVersion = "1.2.0"
 val spark = Seq(
   "com.datastax.spark"  %% "spark-cassandra-connector"  % "1.2.0-alpha2",
   "org.apache.spark" %% "spark-core" % SparkVersion,
-  "org.apache.spark" %% "spark-streaming" % SparkVersion
+  "org.apache.spark" %% "spark-streaming" % SparkVersion,
+  "org.apache.spark"    %% "spark-mllib" % SparkVersion exclude("com.google.guava", "guava") exclude("org.apache.spark", "spark-core")
 )
 
 val akka = Seq(
@@ -47,3 +48,9 @@ enablePlugins(DockerPlugin)
 dockerBaseImage := "dockerfile/java:oracle-java8"
 
 mappings in Universal ++= directory("data")
+
+dockerRepository in Docker := Some("advancedtelematic")
+
+packageName in Docker := "rvi_data_feeds"
+
+dockerUpdateLatest in Docker := true
