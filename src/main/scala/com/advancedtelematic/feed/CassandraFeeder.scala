@@ -20,8 +20,6 @@ class SparkReceiver(files: Array[File]) extends Actor with ActorHelper {
   }
 }
 
-case class ParsedTraceEntry(id: String, timestamp: DateTime, lat: BigDecimal, lng: BigDecimal, isOccupied: Boolean)
-
 case class TraceByCar(id: String, year: Int, month: Int, day: Int, hour: Int, date: Date, lat: BigDecimal, lng: BigDecimal, isOccupied: Boolean)
 
 case class TraceByTime(year: Int, month: Int, day: Int, hour: Int, minute: Int, id: String, lat: BigDecimal, lng: BigDecimal, isOccupied: Boolean)
@@ -29,7 +27,7 @@ case class TraceByTime(year: Int, month: Int, day: Int, hour: Int, minute: Int, 
 case class PickupDropoff(year: Int, date: Date, id: String, lat: BigDecimal, lng: BigDecimal, isPickup: Boolean)
 
 object TraceByCar {
-  def fromTraceEntry( te: ParsedTraceEntry ) = {
+  def fromTraceEntry( te: TraceEntry ) = {
     TraceByCar(
       id = te.id,
       year = te.timestamp.year().get,
@@ -45,7 +43,7 @@ object TraceByCar {
 }
 
 object TraceByTime {
-  def fromTraceEntry(te : ParsedTraceEntry) = {
+  def fromTraceEntry(te : TraceEntry) = {
     TraceByTime(
       id = te.id,
       year = te.timestamp.year().get,
@@ -61,17 +59,6 @@ object TraceByTime {
 }
 
 object CassandraFeeder extends App {
-
-  def parse(id: String, str: String) : ParsedTraceEntry = {
-    val fields = str.split(" ")
-    ParsedTraceEntry(
-      id = id,
-      timestamp = new DateTime( fields(3).toLong * 1000 ),
-      lat = BigDecimal( fields(0) ),
-      lng = BigDecimal( fields(1) ),
-      isOccupied = fields(2) == "1"
-    )
-  }
 
   import com.datastax.spark.connector._
 
@@ -93,7 +80,7 @@ object CassandraFeeder extends App {
 
   val parsedFeeds = feedFiles.map { file =>
     sc.textFile( file.getAbsolutePath )
-      .map( line => parse( file.getName, line ))//.persist()
+      .map( line => TraceEntry.parse( file.getName)( line ))//.persist()
   }
 
   parsedFeeds.foreach( _.map(TraceByCar.fromTraceEntry).saveToCassandra("rvi_demo", "trace_by_car"))

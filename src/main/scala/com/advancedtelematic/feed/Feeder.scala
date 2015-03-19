@@ -4,19 +4,11 @@
  */
 package com.advancedtelematic.feed
 
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Props
-import java.io.File
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.FiniteDuration
+import akka.actor.{Actor, ActorRef, Props}
+import com.github.nscala_time.time.Imports._
 import scala.concurrent.duration._
 import scala.util.Try
 
-case class TraceEntry(id: String, timestamp: DateTime, payload: String)
 
 object Feeder {
 
@@ -25,29 +17,23 @@ object Feeder {
 }
 
 class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef) extends Actor with akka.actor.ActorLogging {
+  import org.joda.time.{Duration => JodaDuration}
 
   var src: scala.io.Source = _
   var data : Iterator[TraceEntry] = _
-
-  def parse(str: String) : TraceEntry = {
-    val fields = str.split(" ")
-    TraceEntry(
-      id = input.getName(),
-      timestamp = new DateTime( fields(3).toLong * 1000 ),
-      payload = str
-    )
-  }
+  var timeDelta: JodaDuration = _
 
   override def preStart() {
     src = scala.io.Source.fromFile(input, "utf-8")
-    data = src.getLines().map( parse )
+    data = src.getLines().map( TraceEntry.parse(input.getName()) )
     val first = data.next()
+    timeDelta = (first.timestamp to DateTime.now).toDuration
     self ! first
   }
 
   def receive : Receive = {
     case entry : TraceEntry =>
-      subscriber ! entry
+      subscriber ! entry.copy( timestamp = entry.timestamp + timeDelta)
       if( data.hasNext ) {
         val next = data.next()
         scheduleNext( entry, next )
@@ -58,7 +44,6 @@ class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef
   }
 
   def scheduleThrottled(speed: Int) : (TraceEntry, TraceEntry) => Unit = (entry, next) => {
-    import com.github.nscala_time.time.Imports._
     val interval = (entry.timestamp to next.timestamp).millis / speed
     context.system.scheduler.scheduleOnce(interval.millis, self, next)(context.dispatcher)
   }
