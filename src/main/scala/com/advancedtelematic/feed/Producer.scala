@@ -8,6 +8,7 @@ import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Props
 import kafka.producer.Producer
+import play.api.libs.json.Json
 
 object KafkaProducer {
   def props( broker : String ) = Props( classOf[KafkaProducer], broker)
@@ -24,7 +25,8 @@ class KafkaProducer(broker : String) extends Actor with ActorLogging {
 
   def receive = {
     case event : TraceEntry =>
-      producer.send(new kafka.producer.KeyedMessage("gps_trace", event.id, event.toCsv()))
+      import TraceEntry.TraceEntryWrites
+      producer.send(new kafka.producer.KeyedMessage("gps_trace", event.id, Json.stringify( Json.toJson( event ) )))
   }
 
   override def postStop() {

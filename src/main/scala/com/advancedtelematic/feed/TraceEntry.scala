@@ -1,6 +1,7 @@
 package com.advancedtelematic.feed
 
 import org.joda.time.DateTime
+import play.api.libs.json.{Json, JsValue, Writes}
 
 case class TraceEntry(id: String, timestamp: DateTime, lat: BigDecimal, lng: BigDecimal, isOccupied: Boolean) {
   def toCsv() : String = s"$id $lat $lng $isOccupied ${timestamp.getMillis / 1000}"
@@ -16,6 +17,19 @@ object TraceEntry {
       lng = BigDecimal( fields(1) ),
       isOccupied = fields(2) == "1" || fields(2) == "true"
     )
+  }
+
+  implicit val TraceEntryWrites = new Writes[TraceEntry] {
+    override def writes(entry: TraceEntry): JsValue = {
+      Json.obj(
+        "vin" -> entry.id,
+        "timestamp" -> entry.timestamp.getMillis,
+        "data" -> Json.arr(
+          Json.obj( "channel" -> "location", "value" -> Json.obj( "lat" -> entry.lat, "lon" -> entry.lng ) ),
+          Json.obj( "channel" -> "occupancy", "value" -> (if(entry.isOccupied) 1 else 0) )
+        )
+      )
+    }
   }
 
 }

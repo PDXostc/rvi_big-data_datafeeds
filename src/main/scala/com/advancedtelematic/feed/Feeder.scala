@@ -4,8 +4,11 @@
  */
 package com.advancedtelematic.feed
 
+import java.io.FileInputStream
+
 import akka.actor.{Actor, ActorRef, Props}
 import com.github.nscala_time.time.Imports._
+import net.jpountz.lz4.{LZ4Factory, LZ4BlockInputStream}
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -24,7 +27,7 @@ class Feeder(input : java.io.File, maybeSpeed: Option[Int], subscriber: ActorRef
   var timeDelta: JodaDuration = _
 
   override def preStart() {
-    src = scala.io.Source.fromFile(input, "utf-8")
+    src = scala.io.Source.fromInputStream( new LZ4BlockInputStream( new FileInputStream(input) ) , "utf-8")
     data = src.getLines().map( TraceEntry.parse(input.getName()) )
     val first = data.next()
     timeDelta = (first.timestamp to DateTime.now).toDuration
