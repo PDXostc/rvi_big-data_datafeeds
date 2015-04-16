@@ -24,9 +24,9 @@ class KafkaProducer(broker : String) extends Actor with ActorLogging {
   }
 
   def receive = {
-    case event : TraceEntry =>
-      import TraceEntry.TraceEntryWrites
-      producer.send(new kafka.producer.KeyedMessage("gps_trace", event.id, Json.stringify( Json.toJson( event ) )))
+    case msg : (TraceEntry, BigDecimal) =>
+      import TraceEntry.TraceAndSpeedWrites
+      producer.send(new kafka.producer.KeyedMessage("gps_trace", msg._1.id, Json.stringify( Json.toJson( msg ) )))
   }
 
   override def postStop() {

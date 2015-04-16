@@ -19,14 +19,16 @@ object TraceEntry {
     )
   }
 
-  implicit val TraceEntryWrites = new Writes[TraceEntry] {
-    override def writes(entry: TraceEntry): JsValue = {
+  implicit val TraceAndSpeedWrites = new Writes[(TraceEntry, BigDecimal)] {
+    override def writes(value: (TraceEntry, BigDecimal)): JsValue = {
+      val (entry, speed) = value
       Json.obj(
         "vin" -> entry.id,
         "timestamp" -> entry.timestamp.getMillis,
         "data" -> Json.arr(
           Json.obj( "channel" -> "location", "value" -> Json.obj( "lat" -> entry.lat, "lon" -> entry.lng ) ),
-          Json.obj( "channel" -> "occupancy", "value" -> (if(entry.isOccupied) 1 else 0) )
+          Json.obj( "channel" -> "occupancy", "value" -> (if(entry.isOccupied) 1 else 0) ),
+          Json.obj( "channel" -> "speed", "value" -> speed)
         )
       )
     }
