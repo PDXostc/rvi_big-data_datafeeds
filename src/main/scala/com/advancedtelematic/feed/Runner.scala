@@ -61,6 +61,7 @@ object Runner extends App {
 //  val producer = akka.actorOf( KafkaProducer.props( conf.getString("kafka.broker")).withDispatcher("kafka-dispatcher"), "kafka" )
 
   val dataFolder = new File( conf.getString("data.dir") )
+  akka.log.info( s"Reading data from $dataFolder" )
   val feedFiles = if (conf.hasPath("feeds.limit")) dataFolder.listFiles().take( conf.getInt("feeds.limit") ) else dataFolder.listFiles()
   val speed = conf.getInt("feeds.speed")
   val feeders = feedFiles.map { file => akka.actorOf(Feeder.props( file, if(speed == 0) None else Some(speed) , producer), file.getName) }
