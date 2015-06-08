@@ -1,7 +1,9 @@
 /**
- * Copyright 2015, ATS Advanced Telematic Systems GmbH
- * All Rights Reserved
- */
+* Copyright (C) 2015, Jaguar Land Rover
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 package com.advancedtelematic.feed
 
 import java.io.FileInputStream
